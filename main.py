@@ -1,7 +1,9 @@
+# main.py
 import pygame
+import sys
 from game.game_engine import GameEngine
 
-# Initialize pygame/Start application
+# Initialize pygame
 pygame.init()
 
 # Screen dimensions
@@ -10,15 +12,14 @@ SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Ping Pong - Pygame Version")
 
 # Colors
-WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 # Clock
 clock = pygame.time.Clock()
 FPS = 60
 
-# Game loop
-engine = GameEngine(WIDTH, HEIGHT)
+# Game engine
+engine = GameEngine(WIDTH, HEIGHT, winning_score=5)
 
 def main():
     running = True
@@ -27,8 +28,18 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            # let engine handle relevant events (like replay choices)
+            engine.handle_event(event)
 
-        engine.handle_input()
+        # If engine signalled an 'exit' via winner (ESC during game over), quit
+        if engine.winner == 'exit':
+            running = False
+            break
+
+        # Only process input/movement when not game over
+        if not engine.game_over:
+            engine.handle_input()
+        # update game state & render
         engine.update()
         engine.render(SCREEN)
 
@@ -36,6 +47,11 @@ def main():
         clock.tick(FPS)
 
     pygame.quit()
+    # ensure full exit from program
+    try:
+        sys.exit(0)
+    except SystemExit:
+        pass
 
 if __name__ == "__main__":
     main()
